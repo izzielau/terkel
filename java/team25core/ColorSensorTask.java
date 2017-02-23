@@ -83,6 +83,7 @@ public class ColorSensorTask extends RobotTask
 
     public void setModeSingle(TargetColor color, int threshold)
     {
+        this.mode = OperatingMode.SINGLE;
         this.targetColor = color;
         this.threshold = threshold;
     }

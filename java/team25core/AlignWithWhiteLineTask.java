@@ -15,6 +15,7 @@ import static team25core.AlignWithWhiteLineTask.AlignmentState.LOOK;
 public class AlignWithWhiteLineTask extends RobotTask {
 
     public enum EventKind {
+        FINE_TUNING,
         ALIGNED,
         GOOD_ENOUGH,
         ABORTED,
@@ -59,6 +60,8 @@ public class AlignWithWhiteLineTask extends RobotTask {
     SensorCriteria leftSeeWhite;
     SensorCriteria rightSeeBlack;
     SensorCriteria rightSeeWhite;
+
+    AlignWithWhiteLineEvent fineTuningEvent = null;
 
     private final static double FAST_SPEED        = 0.7;
     private final static double MEDIUM_FAST_SPEED = 0.2;
@@ -141,6 +144,7 @@ public class AlignWithWhiteLineTask extends RobotTask {
     @Override
     public boolean timeslice()
     {
+
         if ((pivotRightCycle > 6) || (pivotLeftCycle > 6)) {
             RobotLog.i(LOG_TAG + "Calling it good enough");
             robot.queueEvent(new AlignWithWhiteLineEvent(this, EventKind.GOOD_ENOUGH));
@@ -229,6 +233,11 @@ public class AlignWithWhiteLineTask extends RobotTask {
             }
             break;
         case PIVOT_RIGHT_OVER_LEFT:
+            if (fineTuningEvent != null) {
+                fineTuningEvent = new AlignWithWhiteLineEvent(this, EventKind.FINE_TUNING);
+                robot.queueEvent(fineTuningEvent);
+            }
+
             drivetrain.pivotTurn(Drivetrain.PivotSide.RIGHT_OVER_LEFT, SLOW_SPEED);
             if (leftSeeBlack.satisfied() && rightSeeBlack.satisfied()) {
                 setState(AlignmentState.DONE);
@@ -242,6 +251,11 @@ public class AlignWithWhiteLineTask extends RobotTask {
             }
             break;
         case PIVOT_LEFT_OVER_RIGHT:
+            if (fineTuningEvent != null) {
+                fineTuningEvent = new AlignWithWhiteLineEvent(this, EventKind.FINE_TUNING);
+                robot.queueEvent(fineTuningEvent);
+            }
+
             drivetrain.pivotTurn(Drivetrain.PivotSide.LEFT_OVER_RIGHT, SLOW_SPEED);
             if (leftSeeBlack.satisfied() && rightSeeBlack.satisfied()) {
                 setState(AlignmentState.DONE);

@@ -62,7 +62,7 @@ public abstract class Robot extends OpMode {
             return;
         }
 
-        // loop();
+        loop();
     }
 
     @Override
