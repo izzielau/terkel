@@ -11,7 +11,6 @@ import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.internal.vuforia.VuforiaLocalizerImpl;
 
 import java.util.concurrent.BlockingQueue;
 
@@ -59,10 +58,10 @@ public class ColorThiefTask extends RobotTask {
     /**
      * Examine the logs and adjust these values to suit lighting conditions.
      */
-    private final static int RED_DOMINANT_RED_LOWER_THRESHOLD   = 0x60;
-    private final static int RED_DOMINANT_BLUE_UPPER_THRESHOLD  = 0x30;
-    private final static int BLUE_DOMINANT_BLUE_LOWER_THRESHOLD = 0x60;
-    private final static int BLUE_DOMINANT_RED_UPPER_THRESHOLD  = 0x30;
+    private int redDominantRedLowerThreshold   = 0x60;
+    private int redDominantBlueUpperThreshold  = 0x30;
+    private int blueDominantBlueLowerThreshold = 0x60;
+    private int blueDominantRedUpperThreshold  = 0x30;
 
     private final static int POLL_RATE = 2;
 
@@ -74,6 +73,7 @@ public class ColorThiefTask extends RobotTask {
     protected ElapsedTime pollTimer;
     protected Telemetry.Item dominantTelemetry;
     protected Telemetry.Item pollingTelemetry;
+    protected VuforiaLocalizer.CameraDirection cameraDirection;
 
     public ColorThiefTask(Robot robot)
     {
@@ -82,7 +82,20 @@ public class ColorThiefTask extends RobotTask {
         this.pollingMode = PollingMode.OFF;
         this.dominantTelemetry = robot.telemetry.addData("Dominant color: ", "0x000000");
         this.pollingTelemetry = robot.telemetry.addData("Polling: ", "OFF");
+        this.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
     }
+
+    public ColorThiefTask(Robot robot, VuforiaLocalizer.CameraDirection cameraDirection)
+    {
+        super(robot);
+
+        this.pollingMode = PollingMode.OFF;
+        this.dominantTelemetry = robot.telemetry.addData("Dominant color: ", "0x000000");
+        this.pollingTelemetry = robot.telemetry.addData("Polling: ", "OFF");
+        this.cameraDirection = cameraDirection;
+    }
+
+
 
     @Override
     public void start()
@@ -97,7 +110,7 @@ public class ColorThiefTask extends RobotTask {
          * Here we chose the back (HiRes) camera (for greater range), but
          * for a competition robot, the front camera might be more convenient.
          */
-        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        parameters.cameraDirection = this.cameraDirection;
         // this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
         this.vuforia = new VuforiaLocalizerCustom(parameters);
 
@@ -123,6 +136,14 @@ public class ColorThiefTask extends RobotTask {
         }
     }
 
+    public void setThresholds(int redRedLower, int redBlueUpper, int blueBlueLower, int blueRedUpper)
+    {
+        redDominantBlueUpperThreshold = redBlueUpper;
+        redDominantRedLowerThreshold = redRedLower;
+        blueDominantBlueLowerThreshold = blueBlueLower;
+        blueDominantRedUpperThreshold = blueRedUpper;
+    }
+
     private boolean thresholdSatisfied(int dominant, int subordinate, int dominantLower, int subordinateUpper)
     {
         if ((dominant > dominantLower) && (subordinate < subordinateUpper)) {
@@ -136,13 +157,13 @@ public class ColorThiefTask extends RobotTask {
     {
         if (!dominant.isBlack()) {
             if (dominant.red > dominant.blue) {
-                if (thresholdSatisfied(dominant.red, dominant.blue, RED_DOMINANT_RED_LOWER_THRESHOLD, RED_DOMINANT_BLUE_UPPER_THRESHOLD)) {
+                if (thresholdSatisfied(dominant.red, dominant.blue, redDominantRedLowerThreshold, redDominantBlueUpperThreshold)) {
                     robot.queueEvent(new ColorThiefEvent(this, EventKind.RED));
                 } else {
                     robot.queueEvent(new ColorThiefEvent(this, EventKind.BLACK));
                 }
             } else {
-                if (thresholdSatisfied(dominant.blue, dominant.red, BLUE_DOMINANT_BLUE_LOWER_THRESHOLD, BLUE_DOMINANT_RED_UPPER_THRESHOLD)) {
+                if (thresholdSatisfied(dominant.blue, dominant.red, blueDominantBlueLowerThreshold, blueDominantRedUpperThreshold)) {
                     robot.queueEvent(new ColorThiefEvent(this, EventKind.BLUE));
                 } else {
                     robot.queueEvent(new ColorThiefEvent(this, EventKind.BLACK));

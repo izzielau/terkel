@@ -44,8 +44,15 @@ public class VuforiaLCRTask extends RobotTask {
         }
     }
 
+
     @Override
-    public boolean timeslice()
+    public void stop()
+    {
+
+    }
+
+    @Override
+    public void start()
     {
         int cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -60,24 +67,11 @@ public class VuforiaLCRTask extends RobotTask {
         relicTemplate.setName("relicVuMarkTemplate"); // can help in debugging; otherwise not necessary
 
         relicTrackables.activate();
-
-        RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
-
-        if (vuMark == RelicRecoveryVuMark.LEFT) {
-            robot.queueEvent(new VuMarkEvent(this, EventKind.LEFT));
-        } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
-            robot.queueEvent(new VuMarkEvent(this, EventKind.RIGHT));
-        } else if (vuMark == RelicRecoveryVuMark.CENTER) {
-            robot.queueEvent(new VuMarkEvent(this, EventKind.CENTER));
-        }
-
-        return true;
     }
 
     @Override
-    public void stop()
+    public boolean timeslice()
     {
-
         final RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -127,12 +121,6 @@ public class VuforiaLCRTask extends RobotTask {
         });
         */
         return true;
-    }
-
-    @Override
-    public void start()
-    {
-
     }
 
 }
