@@ -1,5 +1,8 @@
 package team25core;
 
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
+
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -11,6 +14,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  */
 
 public class VuforiaLCRTask extends RobotTask {
+
+    private double POLL_RATE = 2000;
+    private VuforiaTrackable relicTemplate;
 
     public enum EventKind {
         LEFT,
@@ -72,6 +78,55 @@ public class VuforiaLCRTask extends RobotTask {
     public void stop()
     {
 
+        final RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
+        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+
+        if (timer.milliseconds() > POLL_RATE) {
+            RobotLog.i("251 Elapsed timer expired");
+            if (vuMark == RelicRecoveryVuMark.LEFT) {
+                RobotLog.i("251 Viewmark sending left event");
+                robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.LEFT));
+            } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
+                RobotLog.i("251 Viewmark sending right event");
+                robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.RIGHT));
+            } else if (vuMark == RelicRecoveryVuMark.CENTER) {
+                RobotLog.i("251 Viewmark sending center event");
+                robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.CENTER));
+            } else if (vuMark == RelicRecoveryVuMark.UNKNOWN) {
+                RobotLog.i("251 Viewmark sending unknown event");
+                robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.UNKNOWN));
+            }
+            timer.reset();
+        }
+        /*
+        robot.addTask(new PeriodicTimerTask(this.robot, 2000) {
+            @Override
+            public void handleEvent(RobotEvent e)
+            {
+                // elapsed timer, time > poll rate
+
+                RobotLog.i("251 Periodic timer for viewmark");
+                PeriodicTimerEvent event = (PeriodicTimerEvent)e;
+                if (event.kind == EventKind.EXPIRED) {
+
+                    if (vuMark == RelicRecoveryVuMark.LEFT) {
+                        RobotLog.i("251 Viewmark sending left event");
+                        robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.LEFT));
+                    } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
+                        RobotLog.i("251 Viewmark sending right event");
+                        robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.RIGHT));
+                    } else if (vuMark == RelicRecoveryVuMark.CENTER) {
+                        RobotLog.i("251 Viewmark sending center event");
+                        robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.CENTER));
+                    } else if (vuMark == RelicRecoveryVuMark.UNKNOWN) {
+                        RobotLog.i("251 Viewmark sending unknown event");
+                        robot.queueEvent(new VuMarkEvent(this, VuforiaLCRTask.EventKind.UNKNOWN));
+                    }
+                }
+            }
+        });
+        */
+        return true;
     }
 
     @Override
